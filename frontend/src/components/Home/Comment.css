@@ -1,0 +1,55 @@
+.comment_container {
+  margin-right: 70px;
+}
+
+.ant-comment-inner {
+  color: #ffffff;
+}
+
+.ant-comment-content-author-name {
+  font-weight: bold;
+  color: #ffffff;
+}
+.ant-comment-content-author-time {
+  margin-left: 10px;
+  color: #9ca3aa;
+  font-size: 13px;
+}
+
+/* 목록 */
+.comment_profile {
+  padding: 5px 5px;
+  margin-left: 15px;
+  display: flex;
+  color: #fff;
+  align-items: center;
+}
+
+.comment_profile img {
+  width: 43px;
+  height: 43px;
+  object-fit: fill;
+  padding: 1px;
+  border-radius: 50%;
+
+  background-color: #fff;
+}
+
+.comment_username {
+  margin-left: 10px;
+  font-weight: bold;
+}
+
+.comment_date {
+  margin-left: 8px;
+  color: #9ca3aa;
+  font-size: 13px;
+}
+.comment_message {
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  padding: 5px 5px;
+  margin-left: 15px;
+  margin-bottom: px;
+}

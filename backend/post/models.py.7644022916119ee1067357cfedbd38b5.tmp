@@ -1,0 +1,117 @@
+from django.db import models
+from django.conf import settings
+from django.utils.timesince import timesince
+from accounts.models import User
+from django.core.files import File
+from urllib.request import urlopen
+from tempfile import NamedTemporaryFile
+
+
+class TimestampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+# 편의시설
+
+
+class UserList(User):
+    category_kind = models.CharField(max_length=80)
+
+    # 표기 이름 변경
+    class Meta:
+        verbose_name_plural = "category_kind"
+
+    def __str__(self):
+        return self.category_kind
+
+
+# 편의시설
+class Category(models.Model):
+    category_kind = models.CharField(max_length=80)
+
+    # 표기 이름 변경
+    class Meta:
+        verbose_name_plural = "category_kind"
+
+    def __str__(self):
+        return self.category_kind
+
+
+# 작성자(user) /제목/ 글쓴이 /출판사/내용/출간일/ 가격/별점/  카테고리 / 사진/ 좋아요 유무 /
+class Post(TimestampedModel):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    title = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
+    publisher = models.CharField(max_length=100)
+    content = models.TextField()
+    # rating = models.IntegerField(default=1, blank=True)
+    review = models.TextField()
+    # price = models.CharField(max_length=30)
+    price = models.IntegerField()
+    date = models.CharField(max_length=30)
+    category = models.CharField(max_length=30)
+    rating = models.IntegerField(default=1)
+
+    # 다 대 다 관계
+    # category = models.ManyToManyField(
+    #    "category", related_name="post_category", blank=True)
+
+    like_user_set = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name="like_post_set",
+    )
+
+    def is_like_user(self, user):
+        return self.like_user_set.filter(pk=user.pk).exists()
+
+    image_file = models.ImageField(upload_to="board/post/%Y/%m/d", blank=True,
+                                   default="board/book.jpg",
+                                   )
+    image_url = models.URLField()
+
+    # id 순서대로 정렬
+    class Meta:
+        ordering = ["-id"]
+
+    def get_remote_image(self):
+        if self.image_url and not self.image_file:
+            # 임시파일생성
+            img_temp = NamedTemporaryFile(delete=True)
+            print(img_temp)
+            img_temp.write(urlopen(self.image_url).read())
+            img_temp.flush()
+            self.image_file.save(f"image_{self.pk}", File(img_temp))
+        self.save()
+
+        def __str__(self):
+            return self.title
+
+
+#  작성자(user) / 게시글 / 댓글내용(메세지)
+class Comment(TimestampedModel):
+    user = models.ForeignKey(
+        User,
+        related_name='comments',
+        on_delete=models.CASCADE,
+    )
+    post = models.ForeignKey(
+        Post,
+        related_name="comments",
+        on_delete=models.CASCADE,
+    )
+    message = models.TextField()
+
+    def __str__(self):
+        return str(self.message)
+
+    class Meta:
+        ordering = ["-id"]

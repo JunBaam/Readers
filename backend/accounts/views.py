@@ -1,0 +1,64 @@
+from .serializers import SignUpSerializer, UserLoginSerializer, UserSerializer
+from accounts.models import User
+from rest_framework import status, viewsets
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView, View
+from rest_framework.generics import ListCreateAPIView, get_object_or_404
+from django.core.exceptions import ValidationError
+from rest_framework.viewsets import ModelViewSet
+
+
+# 유저목록
+class UserViewSet(ModelViewSet):
+    queryset = User
+    serializer_class = UserSerializer
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login(request):
+    if request.method == 'POST':
+        serializer = UserLoginSerializer(data=request.data)
+        serializer.is_valid()
+        # 작성한 이메일에 해당하는 username 을가져옴
+        qs = User.objects.get(email=serializer.validated_data['email'])
+        login_username = qs.username
+        if not serializer.is_valid(raise_exception=True):
+            return Response({"message": "Request Body Error."}, status=status.HTTP_409_CONFLICT)
+        if serializer.validated_data['email'] == "None":
+            return Response({'message': 'fail'}, status=status.HTTP_200_OK)
+
+        response = {
+            'success': 'True',
+            'token': serializer.data['token'],
+            'username': login_username,
+            'pk': qs.id
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def createUser(request):
+    if request.method == 'POST':
+        serializer = SignUpSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            return Response({"message": "Request Body Error."}, status=status.HTTP_409_CONFLICT)
+
+        # first()  : 일치하는 값이 없으면 None 을 출력
+        USERNAME = User.objects.filter(
+            username=serializer.validated_data['username']).first()
+        EMAIL = User.objects.filter(
+            email=serializer.validated_data['email']).first()
+
+        if USERNAME is not None:
+            return Response({"username": "사용중인 아이디입니다!"}, status=status.HTTP_409_CONFLICT)
+        if EMAIL is not None:
+            return Response({"email": "사용중인 이메일입니다!"}, status=status.HTTP_409_CONFLICT)
+
+        if (USERNAME and EMAIL) is None:
+            # serializer 저장 !
+            serializer.save()
+            return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
