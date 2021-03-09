@@ -18,7 +18,7 @@ function SearchDetail({ match }) {
   const Kakao = axios.create({
     baseURL: "https://dapi.kakao.com",
     headers: {
-      Authorization: "KakaoAK 68847a905995af090de7c5f2634912d4",
+      Authorization: "KakaoAK",
     },
   });
 
